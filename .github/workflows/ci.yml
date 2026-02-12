@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: acid
+          POSTGRES_PASSWORD: acid
+          POSTGRES_DB: acidcomics
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U acid -d acidcomics"
+          --health-interval=5s
+          --health-timeout=3s
+          --health-retries=20
+
+    env:
+      DATABASE_URL: postgres://acid:acid@localhost:5432/acidcomics
+      SQLX_OFFLINE: "true"
+      JWT_SECRET: ci_dummy_secret_change_me
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust (stable + clippy + rustfmt)
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+
+      - name: Format check
+        run: cargo fmt --all -- --check
+
+      - name: Clippy (deny warnings)
+        run: cargo clippy --all-targets --all-features -- -D warnings
+
+      - name: Build
+        run: cargo build --all-features
+
+      - name: SQLx offline cache check
+        run: cargo sqlx prepare --check
+
+      - name: Tests
+        run: cargo test --all
+
+      - name: Docker build
+        run: docker build -t acidcomics-api .
