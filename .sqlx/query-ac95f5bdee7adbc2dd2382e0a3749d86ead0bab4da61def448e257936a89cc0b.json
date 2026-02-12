@@ -1,0 +1,56 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO comics (id, author_id, title, description, image_url)\n            VALUES ($1, $2, $3, $4, $5)\n            RETURNING\n              id::text          AS \"id!\",\n              author_id::text   AS \"author_id!\",\n              title             AS \"title!\",\n              description       AS \"description!\",\n              image_url         AS \"image_url?\",\n              created_at::text  AS \"created_at!\"\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "author_id!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "title!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "description!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "image_url?",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "created_at!",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      false,
+      true,
+      true,
+      null
+    ]
+  },
+  "hash": "ac95f5bdee7adbc2dd2382e0a3749d86ead0bab4da61def448e257936a89cc0b"
+}
