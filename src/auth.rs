@@ -46,8 +46,8 @@ pub fn verify_token(token: &str, jwt_secret: &str) -> Result<AuthUser> {
         &Validation::default(),
     )?;
 
-    let user_id = Uuid::parse_str(&data.claims.sub)
-        .map_err(|_| anyhow!("Invalid UUID in token"))?;
+    let user_id =
+        Uuid::parse_str(&data.claims.sub).map_err(|_| anyhow!("Invalid UUID in token"))?;
 
     Ok(AuthUser { user_id })
 }
