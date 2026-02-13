@@ -5,7 +5,6 @@ mod graphql;
 mod routes;
 
 use std::net::SocketAddr;
-use tracing_subscriber;
 
 #[tokio::main]
 async fn main() {

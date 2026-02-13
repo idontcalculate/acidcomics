@@ -1,6 +1,6 @@
 use async_graphql_axum::{GraphQLRequest, GraphQLResponse};
 use axum::{
-    http::{HeaderMap, StatusCode},
+    http::HeaderMap,
     response::Html,
     routing::{get, post},
     Extension, Router,
