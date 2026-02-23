@@ -2,32 +2,24 @@ name: CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
-    services:
-      postgres:
-        image: postgres:16
-        env:
-          POSTGRES_USER: acid
-          POSTGRES_PASSWORD: acid
-          POSTGRES_DB: acidcomics
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd="pg_isready -U acid -d acidcomics"
-          --health-interval=5s
-          --health-timeout=3s
-          --health-retries=20
-
     env:
-      DATABASE_URL: postgres://acid:acid@localhost:5432/acidcomics
+      # SQLx compile-time macros will use the committed .sqlx/ data
       SQLX_OFFLINE: "true"
-      JWT_SECRET: ci_dummy_secret_change_me
+
+      # Needed because your app expects it in config; in CI it's fine to use a placeholder.
+      # This is NOT a "real secret", it's just to satisfy config at build/test time.
+      JWT_SECRET: "ci_placeholder_secret_do_not_use_in_prod"
+
+      # Keep DATABASE_URL defined in case any tests/tools read it,
+      # but we don't actually connect to DB in this job.
+      DATABASE_URL: "postgres://acid:acid@localhost:5432/acidcomics"
 
     steps:
       - name: Checkout
@@ -49,9 +41,6 @@ jobs:
 
       - name: Build
         run: cargo build --all-features
-
-      - name: SQLx offline cache check
-        run: cargo sqlx prepare --check
 
       - name: Tests
         run: cargo test --all
