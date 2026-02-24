@@ -9,6 +9,7 @@ use uuid::Uuid;
 
 use crate::auth::{self, AuthUser};
 
+use super::schema::JwtSecret;
 use super::types::{Comic, ComicRow};
 
 pub struct MutationRoot;
@@ -55,9 +56,10 @@ impl MutationRoot {
     /// Login → returns JWT token string
     async fn login(&self, ctx: &Context<'_>, email: String, password: String) -> Result<String> {
         let pool = ctx.data::<PgPool>()?;
-        let jwt_secret = ctx
-            .data::<String>()
-            .map_err(|_| Error::new("JWT secret missing from schema data"))?;
+        let JwtSecret(jwt_secret) = ctx
+            .data::<JwtSecret>()
+            .map_err(|_| Error::new("JWT secret missing from schema data"))?
+            .clone();
 
         let row = sqlx::query!(
             r#"
@@ -80,7 +82,7 @@ impl MutationRoot {
             .verify_password(password.as_bytes(), &parsed_hash)
             .map_err(|_| Error::new("Invalid email or password"))?;
 
-        let token = auth::sign_token(&row.id, jwt_secret)
+        let token = auth::sign_token(&row.id, &jwt_secret)
             .map_err(|e| Error::new(format!("Token signing failed: {e}")))?;
 
         Ok(token)
@@ -96,6 +98,7 @@ impl MutationRoot {
     ) -> Result<Comic> {
         let pool = ctx.data::<PgPool>()?;
 
+        // AuthUser is stored in the request context by routes.rs (Bearer token parsing).
         let user = ctx
             .data_opt::<AuthUser>()
             .cloned()
@@ -103,8 +106,7 @@ impl MutationRoot {
 
         let comic_id = Uuid::new_v4();
 
-        // IMPORTANT:
-        // Your AuthUser.user_id is already a Uuid → do NOT parse it.
+        // AuthUser.user_id is already a Uuid
         let author_id: Uuid = user.user_id;
 
         let row = sqlx::query_as!(

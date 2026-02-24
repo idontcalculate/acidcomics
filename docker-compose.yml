@@ -17,10 +17,13 @@ services:
 
   api:
     build: .
+    env_file:
+      - .env
     environment:
-      DATABASE_URL: postgres://acid:acid@db:5432/acidcomics
-      JWT_SECRET: super_long_random_secret_key_change_me
-      RUST_LOG: info
+      # DB hostname inside compose is the service name "db"
+      DATABASE_URL: ${DATABASE_URL_DOCKER:-postgres://acid:acid@db:5432/acidcomics}
+      RUST_LOG: ${RUST_LOG:-info}
+      # JWT_SECRET comes from .env (via env_file). No need to repeat it here.
     ports:
       - "4000:4000"
     depends_on:
